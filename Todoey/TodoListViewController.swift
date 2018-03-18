@@ -11,9 +11,17 @@ import UIKit
 class TodoListViewController: UITableViewController {
     
     var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+    
+    // store user key value pairs to be stored persistently
+    let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // set to values set in default plist file (save/retrieve)
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            itemArray = items
+        }
     }
 
 
@@ -66,6 +74,8 @@ class TodoListViewController: UITableViewController {
             print(textField.text)
             // APpend new item to array
             self.itemArray.append(textField.text!)
+            // set in user defaults plist file
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
             // reload table
             self.tableView.reloadData()
         }
