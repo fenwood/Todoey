@@ -8,7 +8,8 @@
 
 import Foundation
 
-class Item {
+// Encodable allows you to write to new custom plist file
+class Item: Encodable, Decodable {
     
     var title: String = ""
     var done: Bool = false

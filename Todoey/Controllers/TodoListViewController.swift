@@ -15,29 +15,39 @@ class TodoListViewController: UITableViewController {
     var itemArray = [Item]()
     
     // store user key value pairs to be stored persistently
-    let defaults = UserDefaults.standard
+    // let defaults = UserDefaults.standard
+    
+    // create new plist to store some data
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let newItem = Item()
-        newItem.title = "Find Mike"
-        itemArray.append(newItem)
-        
-        let newItem2 = Item()
-        newItem2.title = "Buy Eggos"
-        itemArray.append(newItem2)
+    
+        print (dataFilePath)
 
-        let newItem3 = Item()
-        newItem3.title = "Destroy Demogorgon"
-        itemArray.append(newItem3)
+        
+//        let newItem = Item()
+//        newItem.title = "Find Mike"
+//        itemArray.append(newItem)
+//        
+//        let newItem2 = Item()
+//        newItem2.title = "Buy Eggos"
+//        itemArray.append(newItem2)
+//
+//        let newItem3 = Item()
+//        newItem3.title = "Destroy Demogorgon"
+//        itemArray.append(newItem3)
+        
+        // load items
+        loadItems()
 
         
         // set to values set in default plist file (save/retrieve)
         // note user defaults are good for setting user settings (ie volume, country etc)
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = items
-        }
+//        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
+//            itemArray = items
+//        }
         
         
     }
@@ -74,12 +84,11 @@ class TodoListViewController: UITableViewController {
         print(itemArray[indexPath.row])
         
         // sets done property on current property to opposite of what it is now
-        itemArray[indexPath.row].done = !itemArray[index.row].done
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        // reload data so checkmarks appear
-        tableView.reloadData()
+        // save data to plist
+        self.saveItems()
 
-        
         // change highlighted color
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -103,7 +112,11 @@ class TodoListViewController: UITableViewController {
             // APpend new item to array
             self.itemArray.append(newItem)
             // set in user defaults plist file
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            // self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            
+            // save data to plist
+            self.saveItems()
+
             // reload table
             self.tableView.reloadData()
         }
@@ -116,6 +129,31 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    //Mark: - Model Manipulation Methods
+    func saveItems() {
+        // save to plist file
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+
+    }
+    
+    func loadItems() {
+        // decode items from custom plist file
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding item array")
+            }
+            
+        }
+    }
 
 }
 
