@@ -7,8 +7,7 @@
 //
 
 import UIKit
-import CoreData
-
+import RealmSwift
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -19,49 +18,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
+        // print path to realm db
+        print(Realm.Configuration.defaultConfiguration.fileURL!)
+        
         // print path for user defaults file
         print("DB: \n")
         print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
         print(NSSearchPathForDirectoriesInDomains(.applicationSupportDirectory, .userDomainMask, true))
+
+        // Create new realm module and write to db
+        do {
+            _ = try Realm()
+
+        } catch {
+            print("Error initialising new realm, \(error)")
+        }
+        
+        // commit current state of realm
         
         return true
     }
-    
-    func applicationWillTerminate(_ application: UIApplication) {
-        self.saveContext()
-    }
-
-    // MARK: - Core Data stack
-
-    // NSPersistentContainer is essentially a sqlite database
-    lazy var persistentContainer: NSPersistentContainer = {
-
-        let container = NSPersistentContainer(name: "DataModel")
-        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as NSError? {
-                
-                fatalError("Unresolved error \(error), \(error.userInfo)")
-            }
-        })
-        return container
-    }()
-    
-    // MARK: - Core Data Saving support
-    
-    func saveContext () {
-        let context = persistentContainer.viewContext
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                let nserror = error as NSError
-                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
-            }
-        }
-    }
-    
-
-
 
 }
 
