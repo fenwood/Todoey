@@ -8,9 +8,10 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
     
     // initialize new realm
     let realm = try! Realm()
@@ -22,6 +23,10 @@ class CategoryViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadCategories()
+        
+        // remove seperators between cells
+        tableView.separatorStyle = .none
+        
     }
     
     //MARK: - TableView Datasource Methods
@@ -29,14 +34,25 @@ class CategoryViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // if categories is nil return 1 instead
         return categories?.count ?? 1
-        print("Cats")
     }
+    
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        // call SwipeTableViewController super class
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories added yet"
+        //cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories added yet"
+        if let category = categories?[indexPath.row] {
+            
+            cell.textLabel?.text = category.name
+            guard let categoryColour = UIColor(hexString: category.colour) else {fatalError()}
+            // Change cell's background color via chameleon framework
+            cell.backgroundColor = UIColor(hexString: categories?[indexPath.row].colour ?? "1D9BF6")
+            // set font to contrast to bg
+            cell.textLabel?.textColor = ContrastColorOf(categoryColour, returnFlat: true)
+            
+        }
         
         return cell
         
@@ -47,8 +63,6 @@ class CategoryViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         // if click on table send to Items
         performSegue(withIdentifier: "goToItems", sender: indexPath)
-        print("Segue index path")
-        print(indexPath)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -58,8 +72,6 @@ class CategoryViewController: UITableViewController {
         print(tableView.indexPathForSelectedRow)
         if let indexPath = sender as? IndexPath {
             destinationVC.selectedCategory = categories?[indexPath.row]
-            print("Segue")
-            print(categories?[indexPath.row])
         }
     }
 
@@ -86,6 +98,25 @@ class CategoryViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    //MARK: - Delete data from swipe
+    override func updateModel(at indexPath: IndexPath) {
+        
+        // to call methods from superclass
+        super.updateModel(at: indexPath)
+        // optional binding
+        if let categoryForDeletion = self.categories?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
+                    print("item deleted")
+                }
+            } catch {
+                print("Error deleting category, \(error)")
+            }
+        }
+
+    }
+    
     //MARK: - Add New Categories
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -100,6 +131,7 @@ class CategoryViewController: UITableViewController {
             // Using Category as an Object (Realm)
             let newCategory = Category()
             newCategory.name = textField.text!
+            newCategory.colour = UIColor.randomFlat.hexValue()
             
             self.save(category: newCategory)
             
@@ -114,7 +146,6 @@ class CategoryViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
         
     }
-    
-    
-
 }
+
+
